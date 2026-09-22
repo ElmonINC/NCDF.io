@@ -17,7 +17,9 @@ void main() {
     expect(find.text('Sign in'), findsOneWidget);
   });
 
-  testWidgets('routes an administrator to security controls', (WidgetTester tester) async {
+  testWidgets('routes an administrator to security controls', (
+    WidgetTester tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(1400, 900));
     await tester.pumpWidget(const MaterialApp(home: PersonaScreen()));
     await tester.tap(find.text('Administrator'));
