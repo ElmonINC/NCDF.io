@@ -36,14 +36,14 @@ The release script validates, builds, and packages both platforms into `dist/<ve
 .\tool\release.ps1 -Version 1.0.0 -BuildNumber 1
 ```
 
-Use an annotated Git tag to publish through GitHub Actions:
+Pushing to `main` runs validation only. To create a GitHub Release with Windows and Android packages, push a semantic version tag:
 
 ```powershell
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The release workflow runs analysis and tests, builds a Windows ZIP and Android APK, and attaches both artifacts to a GitHub Release. Pull requests and pushes to `main` run the validation workflow.
+The release workflow runs analysis and tests, builds a Windows ZIP and Android APK, and attaches both artifacts to a GitHub Release. It can also be started from the GitHub Actions tab with **Run workflow** and a tag such as `v1.0.0`. Pull requests and pushes to `main` run the validation workflow only.
 
 ## Production security requirements
 
