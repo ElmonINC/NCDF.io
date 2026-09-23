@@ -66,6 +66,6 @@ The administrator screens in the prototype are a product surface for these capab
 
 ## Prototype privileged access
 
-For the clickable demo, the Administrator persona is shown only when the signed-in email and detected source IP match the local allowlists in `lib/main.dart`. Builder and Superadmin users get a separate restricted control-plane screen with a verification step, similar in purpose to a Django admin surface. These are demonstration gates only: a production app must resolve the client IP at the trusted edge and enforce email, role, device, MFA, and permission checks in the backend before returning any privileged data.
+For the clickable demo, the Administrator persona is shown only for email addresses in the local administrator allowlist in `lib/main.dart`; administrator accounts see only that persona. Builder and Superadmin users get a separate restricted control-plane screen with a verification step, similar in purpose to a Django admin surface. These are demonstration gates only: production must enforce email, role, device, MFA, and permission checks in the backend before returning privileged data.
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.

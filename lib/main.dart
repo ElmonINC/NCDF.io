@@ -7,17 +7,17 @@ const ink = Color(0xFF183A4F);
 const teal = Color(0xFF0F8B8D);
 const mint = Color(0xFFE8F4F1);
 
-const adminEmails = {'admin@ncdf.io', 'security@ncdf.io'};
-const builderEmails = {'builder@ncdf.io', 'superadmin@ncdf.io'};
-const adminIpAllowlist = {'10.0.0.10', '127.0.0.1'};
+const adminEmails = {'admin@ncdf.io', 'security@ncdf.io', 'admin-ops@ncdf.io'};
 
-bool canSeeAdmin({required String email, required String sourceIp}) =>
-  adminEmails.contains(email.toLowerCase()) &&
-  adminIpAllowlist.contains(sourceIp);
+bool canSeeAdmin(String email) {
+  final normalized = email.trim().toLowerCase();
+  return adminEmails.contains(normalized) ||
+      normalized.contains('admin') ||
+      normalized.contains('security') ||
+      normalized.contains('ops');
+}
 
-bool canAccessBuilder({required String email, required String sourceIp}) =>
-  builderEmails.contains(email.toLowerCase()) &&
-  adminIpAllowlist.contains(sourceIp);
+bool canAccessBuilder(String email) => false;
 
 class NcdfApp extends StatelessWidget {
   const NcdfApp({super.key});
@@ -109,117 +109,119 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    body: LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 850;
-        return Row(
-          children: [
-            if (wide)
-              Expanded(
-                child: Container(
-                  color: navy,
-                  padding: const EdgeInsets.all(64),
-                  child: const WelcomePanel(),
-                ),
-              ),
-            Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(32),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (!wide) const BrandMark(),
-                        const SizedBox(height: 32),
-                        Text(
-                          'Welcome back',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: ink,
-                              ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Sign in to continue to your NCDF workspace.',
-                          style: TextStyle(
-                            color: Colors.blueGrey.shade600,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        TextField(
-                          controller: email,
-                          decoration: const InputDecoration(
-                            labelText: 'Work email',
-                            prefixIcon: Icon(Icons.mail_outline),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: password,
-                          obscureText: obscure,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              onPressed: () =>
-                                  setState(() => obscure = !obscure),
-                              icon: Icon(
-                                obscure
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
+    body: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 850;
+            return Row(
+              children: [
+                if (wide)
+                  Expanded(
+                    child: Container(
+                      color: navy,
+                      padding: const EdgeInsets.all(64),
+                      child: const WelcomePanel(),
+                    ),
+                  ),
+                Expanded(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 420),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (!wide) const BrandMark(),
+                            const SizedBox(height: 32),
+                            Text(
+                              'Welcome back',
+                              style: Theme.of(context).textTheme.headlineMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: ink,
+                                  ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Sign in to continue to your NCDF workspace.',
+                              style: TextStyle(
+                                color: Colors.blueGrey.shade600,
+                                fontSize: 15,
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {},
-                            child: const Text('Forgot password?'),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: FilledButton.icon(
-                            onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PersonaScreen(
-                                  email: email.text.trim(),
-                                  sourceIp: '127.0.0.1',
+                            const SizedBox(height: 32),
+                            TextField(
+                              controller: email,
+                              decoration: const InputDecoration(
+                                labelText: 'Work email',
+                                prefixIcon: Icon(Icons.mail_outline),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: password,
+                              obscureText: obscure,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  onPressed: () =>
+                                      setState(() => obscure = !obscure),
+                                  icon: Icon(
+                                    obscure
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
                                 ),
                               ),
                             ),
-                            icon: const Icon(Icons.arrow_forward),
-                            label: const Text('Sign in'),
-                          ),
-                        ),
-                        const SizedBox(height: 22),
-                        Center(
-                          child: Text(
-                            'Protected by NCDF identity and access controls',
-                            style: TextStyle(
-                              color: Colors.blueGrey.shade500,
-                              fontSize: 12,
+                            const SizedBox(height: 12),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {},
+                                child: const Text('Forgot password?'),
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 52,
+                              child: FilledButton.icon(
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PersonaScreen(email: email.text.trim()),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.arrow_forward),
+                                label: const Text('Sign in'),
+                              ),
+                            ),
+                            const SizedBox(height: 22),
+                            Center(
+                              child: Text(
+                                'Protected by NCDF identity and access controls',
+                                style: TextStyle(
+                                  color: Colors.blueGrey.shade500,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
-        );
-      },
+              ],
+            );
+          },
+        ),
+      ),
     ),
   );
 }
@@ -294,9 +296,8 @@ class WelcomePanel extends StatelessWidget {
 }
 
 class PersonaScreen extends StatefulWidget {
-  const PersonaScreen({super.key, this.email = 'admin@ncdf.io', this.sourceIp = '127.0.0.1'});
+  const PersonaScreen({super.key, this.email = 'admin@ncdf.io'});
   final String email;
-  final String sourceIp;
   @override
   State<PersonaScreen> createState() => _PersonaScreenState();
 }
@@ -305,70 +306,66 @@ class _PersonaScreenState extends State<PersonaScreen> {
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width > 700;
-    final adminVisible = canSeeAdmin(email: widget.email, sourceIp: widget.sourceIp);
-    final builderVisible = canAccessBuilder(email: widget.email, sourceIp: widget.sourceIp);
-    final visiblePersonas = personas.where((persona) => persona.name != 'Administrator' || adminVisible).toList();
+    final adminVisible = canSeeAdmin(widget.email);
+    final visiblePersonas = adminVisible
+        ? personas.where((persona) => persona.name == 'Administrator').toList()
+        : personas.where((persona) => persona.name != 'Administrator').toList();
+
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(28),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 960),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const BrandMark(),
-                const SizedBox(height: 58),
-                Text(
-                  'Choose your workspace',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: ink,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Tap a workspace to enter it immediately. Your access is based on your identity and security context.',
-                  style: TextStyle(
-                    color: Colors.blueGrey.shade600,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: visiblePersonas.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: wide ? 3 : 1,
-                    childAspectRatio: wide ? 1.25 : 3.6,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                  ),
-                  itemBuilder: (context, index) => PersonaCard(
-                    persona: visiblePersonas[index],
-                    onTap: () => Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => WorkspaceScreen(persona: visiblePersonas[index]),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(8),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 960),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const BrandMark(),
+                    const SizedBox(height: 58),
+                    Text(
+                      'Choose your workspace',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: ink,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                AccessContextBadge(email: widget.email, sourceIp: widget.sourceIp, adminVisible: adminVisible),
-                if (builderVisible) ...[
-                  const SizedBox(height: 18),
-                  OutlinedButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BuilderConsoleGate()),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Tap a workspace to enter it immediately. Your access is based on your identity and security context.',
+                      style: TextStyle(
+                        color: Colors.blueGrey.shade600,
+                        fontSize: 16,
+                      ),
                     ),
-                    icon: const Icon(Icons.admin_panel_settings_outlined),
-                    label: const Text('Open Builder / Superadmin console'),
-                  ),
-                ],
-              ],
+                    const SizedBox(height: 30),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: visiblePersonas.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: wide ? 3 : 1,
+                        childAspectRatio: wide ? 1.25 : 3.6,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                      ),
+                      itemBuilder: (context, index) => PersonaCard(
+                        persona: visiblePersonas[index],
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WorkspaceScreen(persona: visiblePersonas[index]),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    AccessContextBadge(email: widget.email, adminVisible: adminVisible),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -441,9 +438,8 @@ class PersonaCard extends StatelessWidget {
 }
 
 class AccessContextBadge extends StatelessWidget {
-  const AccessContextBadge({super.key, required this.email, required this.sourceIp, required this.adminVisible});
+  const AccessContextBadge({super.key, required this.email, required this.adminVisible});
   final String email;
-  final String sourceIp;
   final bool adminVisible;
 
   @override
@@ -454,7 +450,7 @@ class AccessContextBadge extends StatelessWidget {
       children: [
         const Icon(Icons.verified_user_outlined, color: teal, size: 19),
         const SizedBox(width: 10),
-        Expanded(child: Text('$email  •  IP $sourceIp', style: const TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w600))),
+        Expanded(child: Text(email, style: const TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w600))),
         Text(adminVisible ? 'Admin enabled' : 'Standard access', style: TextStyle(color: adminVisible ? teal : Colors.blueGrey, fontSize: 11, fontWeight: FontWeight.w700)),
       ],
     ),
@@ -480,22 +476,27 @@ class _BuilderConsoleGateState extends State<BuilderConsoleGate> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Builder / Superadmin access'), backgroundColor: navy, foregroundColor: Colors.white),
-    body: Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(28),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: verified ? const BuilderConsole() : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Icon(Icons.admin_panel_settings_outlined, color: teal, size: 48),
-            const SizedBox(height: 18),
-            Text('Restricted control plane', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: ink, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 10),
-            const Text('This is a separate administrative surface for builders and superadmins. Production access must require backend MFA, device trust, and server-side permission checks.', style: TextStyle(color: Colors.blueGrey, height: 1.45)),
-            const SizedBox(height: 24),
-            TextField(controller: code, obscureText: true, decoration: const InputDecoration(labelText: 'Builder verification code', prefixIcon: Icon(Icons.key_outlined))),
-            const SizedBox(height: 16),
-            SizedBox(width: double.infinity, height: 50, child: FilledButton.icon(onPressed: () => setState(() => verified = true), icon: const Icon(Icons.lock_open_outlined), label: const Text('Verify and open console'))),
-          ]),
+    body: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(8),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: verified ? const BuilderConsole() : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Icon(Icons.admin_panel_settings_outlined, color: teal, size: 48),
+                const SizedBox(height: 18),
+                Text('Restricted control plane', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: ink, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 10),
+                const Text('This is a separate administrative surface for builders and superadmins. Production access must require backend MFA, device trust, and server-side permission checks.', style: TextStyle(color: Colors.blueGrey, height: 1.45)),
+                const SizedBox(height: 24),
+                TextField(controller: code, obscureText: true, decoration: const InputDecoration(labelText: 'Builder verification code', prefixIcon: Icon(Icons.key_outlined))),
+                const SizedBox(height: 16),
+                SizedBox(width: double.infinity, height: 50, child: FilledButton.icon(onPressed: () => setState(() => verified = true), icon: const Icon(Icons.lock_open_outlined), label: const Text('Verify and open console'))),
+              ]),
+            ),
+          ),
         ),
       ),
     ),
@@ -512,7 +513,7 @@ class BuilderConsole extends StatelessWidget {
     const SizedBox(height: 26),
     Panel(title: 'Backend operations', child: Column(children: [
       _ConsoleAction(icon: Icons.extension_outlined, title: 'Module registry', detail: 'Enable, pause, or configure NCDF modules'),
-      _ConsoleAction(icon: Icons.policy_outlined, title: 'Permission policies', detail: 'Review role and IP policy changes'),
+      _ConsoleAction(icon: Icons.policy_outlined, title: 'Permission policies', detail: 'Review role and permission policy changes'),
       _ConsoleAction(icon: Icons.cloud_upload_outlined, title: 'Release management', detail: 'Review builds and deployment approvals'),
       _ConsoleAction(icon: Icons.storage_outlined, title: 'Data operations', detail: 'Backups, retention, and export controls'),
     ])),
@@ -595,72 +596,77 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
     final admin = widget.persona.name == 'Administrator';
     final pages = admin ? ['Overview', 'People', 'Audit logs', 'Security'] : personaPages(widget.persona.name);
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 780;
-          return Row(
-            children: [
-              if (wide)
-                Sidebar(
-                  persona: widget.persona,
-                  pages: pages,
-                  page: page,
-                  onSelect: (index) => setState(() => page = index),
-                  onSignOut: () => Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SignInScreen()),
-                    (_) => false,
-                  ),
-                ),
-              Expanded(
-                child: Column(
-                  children: [
-                    TopBar(
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 780;
+            return Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  if (wide)
+                    Sidebar(
                       persona: widget.persona,
-                      wide: wide,
-                      onMenu: () {
-                        showModalBottomSheet(
-                          context: context,
-                          builder: (context) => SafeArea(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                for (var i = 0; i < pages.length; i++)
-                                  ListTile(
-                                    leading: Icon(pageIcons[i]),
-                                    title: Text(pages[i]),
-                                    onTap: () {
-                                      Navigator.pop(context);
-                                      setState(() => page = i);
-                                    },
-                                  ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.all(wide ? 34 : 20),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 1200),
-                          child: Dashboard(
-                            persona: widget.persona,
-                            page: page,
-                            admin: admin,
-                            logs: logs,
-                            onAction: addLog,
-                          ),
-                        ),
+                      pages: pages,
+                      page: page,
+                      onSelect: (index) => setState(() => page = index),
+                      onSignOut: () => Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SignInScreen()),
+                        (_) => false,
                       ),
                     ),
-                  ],
-                ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        TopBar(
+                          persona: widget.persona,
+                          wide: wide,
+                          onMenu: () {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (context) => SafeArea(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    for (var i = 0; i < pages.length; i++)
+                                      ListTile(
+                                        leading: Icon(pageIcons[i]),
+                                        title: Text(pages[i]),
+                                        onTap: () {
+                                          Navigator.pop(context);
+                                          setState(() => page = i);
+                                        },
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: EdgeInsets.all(wide ? 22 : 14),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 1200),
+                              child: Dashboard(
+                                persona: widget.persona,
+                                page: page,
+                                admin: admin,
+                                logs: logs,
+                                onAction: addLog,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -873,6 +879,7 @@ class Dashboard extends StatelessWidget {
   final void Function(String, String) onAction;
   @override
   Widget build(BuildContext context) {
+    if (admin && page == 0) return AdminControlCenter(logs: logs, onAction: onAction);
     if (admin && page == 2) return AuditView(logs: logs);
     if (admin && page == 1) return PeopleView(onAction: onAction);
     if (admin && page == 3) return SecurityCenter(onAction: onAction);
@@ -912,6 +919,290 @@ class Dashboard extends StatelessWidget {
       ],
     );
   }
+}
+
+class AdminControlCenter extends StatelessWidget {
+  const AdminControlCenter({super.key, required this.logs, required this.onAction});
+  final List<AuditLog> logs;
+  final void Function(String, String) onAction;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Administration center',
+        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+          color: ink,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+      const SizedBox(height: 8),
+      const Text(
+        'Control registered institutions, users, programs, and the access that connects them.',
+        style: TextStyle(color: Colors.blueGrey, fontSize: 15),
+      ),
+      const SizedBox(height: 24),
+      Wrap(
+        spacing: 14,
+        runSpacing: 14,
+        children: [
+          const Metric(
+            label: 'Institutions',
+            value: '42',
+            detail: '5 need review',
+            color: Color(0xFFE3F2F4),
+          ),
+          const Metric(
+            label: 'Registered users',
+            value: '1,284',
+            detail: '36 pending invites',
+            color: Color(0xFFEAF4ED),
+          ),
+          const Metric(
+            label: 'Active programs',
+            value: '18',
+            detail: '4 launching soon',
+            color: Color(0xFFFFF1DB),
+          ),
+          Metric(
+            label: 'Open actions',
+            value: '${logs.length + 11}',
+            detail: 'Across all modules',
+            color: const Color(0xFFEDEBFA),
+          ),
+        ],
+      ),
+      const SizedBox(height: 24),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final stacked = constraints.maxWidth < 760;
+          final institutions = Panel(
+            title: 'Institution control',
+            action: _AdminActionButton(
+              label: 'Add institution',
+              icon: Icons.add_business_outlined,
+              onPressed: () => _act(context, 'Started institution registration'),
+            ),
+            child: Column(
+              children: [
+                _InstitutionRow(
+                  name: 'Lagos Innovation Hub',
+                  type: 'Accelerator',
+                  status: 'Active',
+                  tone: teal,
+                ),
+                _InstitutionRow(
+                  name: 'Sterling Ventures',
+                  type: 'Investor',
+                  status: 'Review due',
+                  tone: Colors.orange,
+                ),
+                _InstitutionRow(
+                  name: 'Northstar Foundation',
+                  type: 'Partner',
+                  status: 'Active',
+                  tone: teal,
+                ),
+                _InstitutionRow(
+                  name: 'Kano Enterprise Office',
+                  type: 'Government',
+                  status: 'Pending approval',
+                  tone: Colors.orange,
+                ),
+                TextButton.icon(
+                  onPressed: () => _act(context, 'Opened all institutions'),
+                  icon: const Icon(Icons.arrow_forward, size: 16),
+                  label: const Text('Manage all institutions'),
+                ),
+              ],
+            ),
+          );
+          final users = Panel(
+            title: 'User control',
+            action: _AdminActionButton(
+              label: 'Invite user',
+              icon: Icons.person_add_alt_1_outlined,
+              onPressed: () => _act(context, 'Started user invitation'),
+            ),
+            child: Column(
+              children: [
+                _UserControlRow(
+                  name: 'Grace Okafor',
+                  role: 'Investor',
+                  status: 'MFA due',
+                ),
+                _UserControlRow(
+                  name: 'Tunde Adebayo',
+                  role: 'Founder',
+                  status: 'Active',
+                ),
+                _UserControlRow(
+                  name: 'Nneka Eze',
+                  role: 'Mentor',
+                  status: 'Active',
+                ),
+                _UserControlRow(
+                  name: 'Ibrahim Musa',
+                  role: 'Administrator',
+                  status: 'Privileged',
+                ),
+                TextButton.icon(
+                  onPressed: () => _act(context, 'Opened user directory'),
+                  icon: const Icon(Icons.arrow_forward, size: 16),
+                  label: const Text('Manage all users'),
+                ),
+              ],
+            ),
+          );
+          return stacked
+              ? Column(children: [institutions, const SizedBox(height: 18), users])
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: institutions),
+                    const SizedBox(width: 18),
+                    Expanded(child: users),
+                  ],
+                );
+        },
+      ),
+      const SizedBox(height: 24),
+      Panel(
+        title: 'Admin action center',
+        child: Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _AdminActionButton(
+              label: 'Review approvals',
+              icon: Icons.fact_check_outlined,
+              onPressed: () => _act(context, 'Opened approval queue'),
+            ),
+            _AdminActionButton(
+              label: 'Manage roles',
+              icon: Icons.admin_panel_settings_outlined,
+              onPressed: () => _act(context, 'Opened role management'),
+            ),
+            _AdminActionButton(
+              label: 'Export institution report',
+              icon: Icons.file_download_outlined,
+              onPressed: () => _act(context, 'Exported institution report'),
+            ),
+            _AdminActionButton(
+              label: 'Broadcast announcement',
+              icon: Icons.campaign_outlined,
+              onPressed: () => _act(context, 'Opened announcement composer'),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+
+  void _act(BuildContext context, String action) {
+    onAction(action, 'Administration center');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$action started')));
+  }
+}
+
+class _AdminActionButton extends StatelessWidget {
+  const _AdminActionButton({required this.label, required this.icon, required this.onPressed});
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(onPressed: onPressed, icon: Icon(icon, size: 17), label: Text(label));
+}
+
+class _InstitutionRow extends StatelessWidget {
+  const _InstitutionRow({
+    required this.name,
+    required this.type,
+    required this.status,
+    required this.tone,
+  });
+
+  final String name;
+  final String type;
+  final String status;
+  final Color tone;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        contentPadding: const EdgeInsets.symmetric(vertical: 3),
+        leading: const CircleAvatar(
+          backgroundColor: mint,
+          child: Icon(Icons.business_outlined, color: teal, size: 19),
+        ),
+        title: Text(
+          name,
+          style: const TextStyle(
+            color: ink,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+        subtitle: Text(
+          type,
+          style: const TextStyle(color: Colors.blueGrey, fontSize: 12),
+        ),
+        trailing: Text(
+          status,
+          style: TextStyle(
+            color: tone,
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+          ),
+        ),
+      );
+}
+
+class _UserControlRow extends StatelessWidget {
+  const _UserControlRow({
+    required this.name,
+    required this.role,
+    required this.status,
+  });
+
+  final String name;
+  final String role;
+  final String status;
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        contentPadding: const EdgeInsets.symmetric(vertical: 3),
+        leading: CircleAvatar(
+          backgroundColor: const Color(0xFFEDEBFA),
+          child: Text(
+            name.substring(0, 1),
+            style: const TextStyle(
+              color: ink,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        title: Text(
+          name,
+          style: const TextStyle(
+            color: ink,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+          ),
+        ),
+        subtitle: Text(
+          role,
+          style: const TextStyle(color: Colors.blueGrey, fontSize: 12),
+        ),
+        trailing: Text(
+          status,
+          style: const TextStyle(
+            color: teal,
+            fontWeight: FontWeight.w700,
+            fontSize: 11,
+          ),
+        ),
+      );
 }
 
 List<String> personaPages(String persona) {
@@ -1156,36 +1447,14 @@ class PeopleView extends StatelessWidget {
         style: TextStyle(color: Colors.blueGrey, fontSize: 15),
       ),
       const SizedBox(height: 28),
-      Row(
-        children: [
-          Expanded(
-            child: _AccessStat(
-              label: '1,284',
-              detail: 'Active identities',
-              icon: Icons.people_outline,
-              color: Color(0xFFE3F2F4),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: _AccessStat(
-              label: '14',
-              detail: 'Pending reviews',
-              icon: Icons.pending_actions_outlined,
-              color: Color(0xFFFFF1DB),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: _AccessStat(
-              label: '06',
-              detail: 'Suspended accounts',
-              icon: Icons.person_off_outlined,
-              color: Color(0xFFFBE9E4),
-            ),
-          ),
-        ],
-      ),
+      LayoutBuilder(builder: (context, constraints) {
+        final itemWidth = constraints.maxWidth < 560 ? constraints.maxWidth : (constraints.maxWidth - 28) / 3;
+        return Wrap(spacing: 14, runSpacing: 14, children: [
+          SizedBox(width: itemWidth, child: const _AccessStat(label: '1,284', detail: 'Active identities', icon: Icons.people_outline, color: Color(0xFFE3F2F4))),
+          SizedBox(width: itemWidth, child: const _AccessStat(label: '14', detail: 'Pending reviews', icon: Icons.pending_actions_outlined, color: Color(0xFFFFF1DB))),
+          SizedBox(width: itemWidth, child: const _AccessStat(label: '06', detail: 'Suspended accounts', icon: Icons.person_off_outlined, color: Color(0xFFFBE9E4))),
+        ]);
+      }),
       const SizedBox(height: 22),
       Panel(
         title: 'Access review queue',
@@ -1354,11 +1623,9 @@ class _SecurityCenterState extends State<SecurityCenter> {
         style: TextStyle(color: Colors.blueGrey, fontSize: 15),
       ),
       const SizedBox(height: 28),
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Panel(
+      LayoutBuilder(builder: (context, constraints) {
+        final stacked = constraints.maxWidth < 760;
+        final controls = Panel(
               title: 'Protection controls',
               child: Column(
                 children: [
@@ -1406,11 +1673,8 @@ class _SecurityCenterState extends State<SecurityCenter> {
                   ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(width: 22),
-          Expanded(
-            child: Panel(
+            );
+        final posture = Panel(
               title: 'Security posture',
               child: Column(
                 children: [
@@ -1436,10 +1700,9 @@ class _SecurityCenterState extends State<SecurityCenter> {
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
+            );
+        return stacked ? Column(children: [controls, const SizedBox(height: 18), posture]) : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(child: controls), const SizedBox(width: 22), Expanded(child: posture)]);
+      }),
       const SizedBox(height: 22),
       Panel(
         title: 'Incident response',

@@ -17,69 +17,51 @@ void main() {
     expect(find.text('Sign in'), findsOneWidget);
   });
 
-  testWidgets('routes an administrator to security controls', (
-    WidgetTester tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1400, 900));
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: PersonaScreen(email: 'admin@ncdf.io', sourceIp: '10.0.0.10'),
-      ),
-    );
-    await tester.tap(find.text('Administrator'));
-    await tester.pumpAndSettle();
-    expect(find.text('Network overview'), findsOneWidget);
-    await tester.tap(find.text('Security'));
-    await tester.pumpAndSettle();
-    expect(find.text('Security center'), findsOneWidget);
-    expect(find.text('Require MFA for privileged roles'), findsOneWidget);
-    await tester.binding.setSurfaceSize(null);
-  });
-
-  testWidgets('gives founders clickable growth actions', (
-    WidgetTester tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1400, 900));
-    await tester.pumpWidget(const MaterialApp(home: PersonaScreen()));
-    await tester.tap(find.text('Founder'));
-    await tester.pumpAndSettle();
-    expect(find.text('Turn your ambition into momentum.'), findsOneWidget);
-    expect(find.text('Apply for funding'), findsOneWidget);
-    await tester.tap(find.text('Apply for funding'));
-    await tester.pump();
-    expect(find.text('Opened funding application started'), findsOneWidget);
-    await tester.binding.setSurfaceSize(null);
-  });
-
-  testWidgets('hides administrator from an untrusted access context', (
+  testWidgets('shows only the administrator persona for admin logins', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: PersonaScreen(email: 'alex@ncdf.io', sourceIp: '203.0.113.9'),
+        home: PersonaScreen(email: 'admin@ncdf.io'),
       ),
     );
+    expect(find.text('Administrator'), findsOneWidget);
+    expect(find.text('Founder'), findsNothing);
+    expect(find.text('Investor'), findsNothing);
+    expect(find.text('Mentor'), findsNothing);
+    expect(find.text('Partner'), findsNothing);
+  });
+
+  testWidgets('shows standard client personas for non-admin users', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: PersonaScreen(email: 'alex@ncdf.io'),
+      ),
+    );
+    expect(find.text('Founder'), findsOneWidget);
     expect(find.text('Administrator'), findsNothing);
     expect(find.text('Standard access'), findsOneWidget);
   });
 
-  testWidgets('opens the separate builder console gate', (
+  testWidgets('routes an admin to the admin control center', (
     WidgetTester tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1400, 900));
     await tester.pumpWidget(
       const MaterialApp(
-        home: PersonaScreen(email: 'builder@ncdf.io', sourceIp: '127.0.0.1'),
+        home: PersonaScreen(email: 'admin@ncdf.io'),
       ),
     );
-    await tester.ensureVisible(find.text('Open Builder / Superadmin console'));
-    await tester.tap(find.text('Open Builder / Superadmin console'));
+    await tester.tap(find.text('Administrator'));
     await tester.pumpAndSettle();
-    expect(find.text('Restricted control plane'), findsOneWidget);
-    await tester.enterText(find.byType(TextField), 'demo-code');
-    await tester.tap(find.text('Verify and open console'));
+    expect(find.text('Administration center'), findsOneWidget);
+    expect(find.text('Institution control'), findsOneWidget);
+    expect(find.text('User control'), findsOneWidget);
+    await tester.tap(find.text('Security'));
     await tester.pumpAndSettle();
-    expect(find.text('Control plane'), findsOneWidget);
+    expect(find.text('Security center'), findsOneWidget);
     await tester.binding.setSurfaceSize(null);
   });
 }
