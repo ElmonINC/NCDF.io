@@ -502,9 +502,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   @override
   Widget build(BuildContext context) {
     final admin = widget.persona.name == 'Administrator';
-    final pages = admin
-        ? ['Overview', 'People', 'Audit logs', 'Security']
-        : ['Overview', 'My applications', 'Opportunities', 'Messages'];
+    final pages = admin ? ['Overview', 'People', 'Audit logs', 'Security'] : personaPages(widget.persona.name);
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -787,6 +785,7 @@ class Dashboard extends StatelessWidget {
     if (admin && page == 2) return AuditView(logs: logs);
     if (admin && page == 1) return PeopleView(onAction: onAction);
     if (admin && page == 3) return SecurityCenter(onAction: onAction);
+    if (!admin && page == 0) return PersonaHome(persona: persona, onAction: onAction);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -823,6 +822,228 @@ class Dashboard extends StatelessWidget {
     );
   }
 }
+
+List<String> personaPages(String persona) {
+  switch (persona) {
+    case 'Founder':
+      return ['Overview', 'My applications', 'Funding opportunities', 'Messages'];
+    case 'Investor':
+      return ['Overview', 'Deal room', 'Portfolio', 'Messages'];
+    case 'Mentor':
+      return ['Overview', 'My sessions', 'Founder requests', 'Messages'];
+    case 'Partner':
+      return ['Overview', 'Partnerships', 'Programs', 'Messages'];
+    default:
+      return ['Overview', 'Workspace', 'Opportunities', 'Messages'];
+  }
+}
+
+class PersonaHome extends StatelessWidget {
+  const PersonaHome({super.key, required this.persona, required this.onAction});
+  final Persona persona;
+  final void Function(String, String) onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = _personaContent[persona.name]!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          content.greeting,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: ink,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(content.summary, style: const TextStyle(color: Colors.blueGrey, fontSize: 15)),
+        const SizedBox(height: 26),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: navy,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) => Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(content.eyebrow.toUpperCase(), style: const TextStyle(color: Color(0xFF8AD3C8), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                      const SizedBox(height: 10),
+                      Text(content.heroTitle, style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 8),
+                      Text(content.heroBody, style: TextStyle(color: Colors.white.withValues(alpha: .72), height: 1.45)),
+                      const SizedBox(height: 18),
+                      FilledButton.icon(
+                        style: FilledButton.styleFrom(backgroundColor: const Color(0xFF8AD3C8), foregroundColor: navy),
+                        onPressed: () => _performAction(context, content.primaryAction, content.primaryModule),
+                        icon: Icon(content.primaryIcon),
+                        label: Text(content.primaryAction),
+                      ),
+                    ],
+                  ),
+                ),
+                if (constraints.maxWidth > 520) ...[
+                  const SizedBox(width: 24),
+                  Icon(content.heroIcon, size: 92, color: Colors.white.withValues(alpha: .16)),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(content.sectionTitle, style: const TextStyle(color: ink, fontSize: 17, fontWeight: FontWeight.w800)),
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (context, constraints) => GridView.count(
+            crossAxisCount: constraints.maxWidth > 800 ? 3 : 1,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            childAspectRatio: constraints.maxWidth > 800 ? 1.3 : 4.1,
+            children: [
+              for (final card in content.cards)
+                ActionCard(
+                  card: card,
+                  onTap: () => _performAction(context, card.action, content.sectionTitle),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _performAction(BuildContext context, String action, String module) {
+    onAction(action, module);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$action started')));
+  }
+}
+
+class ActionCard extends StatelessWidget {
+  const ActionCard({super.key, required this.card, required this.onTap});
+  final PersonaAction card;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(14),
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE1E9E6))),
+      child: Row(
+        children: [
+          Container(width: 40, height: 40, decoration: BoxDecoration(color: card.color, borderRadius: BorderRadius.circular(10)), child: Icon(card.icon, color: ink, size: 20)),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [Text(card.title, style: const TextStyle(color: ink, fontWeight: FontWeight.w800, fontSize: 13)), const SizedBox(height: 4), Text(card.detail, style: const TextStyle(color: Colors.blueGrey, fontSize: 11))])),
+          const Icon(Icons.arrow_forward_ios, color: teal, size: 14),
+        ],
+      ),
+    ),
+  );
+}
+
+class PersonaContent {
+  const PersonaContent({required this.greeting, required this.summary, required this.eyebrow, required this.heroTitle, required this.heroBody, required this.primaryAction, required this.primaryModule, required this.primaryIcon, required this.heroIcon, required this.sectionTitle, required this.cards});
+  final String greeting;
+  final String summary;
+  final String eyebrow;
+  final String heroTitle;
+  final String heroBody;
+  final String primaryAction;
+  final String primaryModule;
+  final IconData primaryIcon;
+  final IconData heroIcon;
+  final String sectionTitle;
+  final List<PersonaAction> cards;
+}
+
+class PersonaAction {
+  const PersonaAction(this.title, this.detail, this.action, this.icon, this.color);
+  final String title;
+  final String detail;
+  final String action;
+  final IconData icon;
+  final Color color;
+}
+
+const _personaContent = {
+  'Founder': PersonaContent(
+    greeting: 'Turn your ambition into momentum.',
+    summary: 'Bring your venture closer to the capital, people, and decisions that can move it forward.',
+    eyebrow: 'Founder launchpad',
+    heroTitle: 'Your venture readiness is 65% complete.',
+    heroBody: 'Complete your profile once and make your story easier for investors, mentors, and partners to act on.',
+    primaryAction: 'Complete my profile',
+    primaryModule: 'Founder profile',
+    primaryIcon: Icons.arrow_forward,
+    heroIcon: Icons.rocket_launch_outlined,
+    sectionTitle: 'Make your next move',
+    cards: [
+      PersonaAction('Apply for funding', '3 open programs match your sector', 'Opened funding application', Icons.currency_exchange, Color(0xFFEAF4ED)),
+      PersonaAction('Prepare your pitch', 'Use the investor-ready checklist', 'Opened pitch checklist', Icons.present_to_all_outlined, Color(0xFFFFF1DB)),
+      PersonaAction('Find a mentor', '8 mentors are available this month', 'Opened mentor matching', Icons.diversity_3_outlined, Color(0xFFEDEBFA)),
+    ],
+  ),
+  'Investor': PersonaContent(
+    greeting: 'See the opportunities worth your attention.',
+    summary: 'A focused deal room for discovering credible ventures and moving from interest to diligence.',
+    eyebrow: 'Investor deal room',
+    heroTitle: '12 ventures match your thesis.',
+    heroBody: 'Review curated opportunities, compare readiness, and request a conversation with founders in one place.',
+    primaryAction: 'Explore matched ventures',
+    primaryModule: 'Deal room',
+    primaryIcon: Icons.explore_outlined,
+    heroIcon: Icons.trending_up,
+    sectionTitle: 'Move from discovery to decision',
+    cards: [
+      PersonaAction('Review shortlist', '4 founder profiles need your review', 'Opened investment shortlist', Icons.fact_check_outlined, Color(0xFFFFF1DB)),
+      PersonaAction('Request diligence', 'Start a secure information request', 'Started diligence request', Icons.manage_search_outlined, Color(0xFFE3F2F4)),
+      PersonaAction('Schedule founder call', 'Coordinate your next conversation', 'Opened founder scheduling', Icons.calendar_month_outlined, Color(0xFFEAF4ED)),
+    ],
+  ),
+  'Mentor': PersonaContent(
+    greeting: 'Your experience can unlock someone’s next chapter.',
+    summary: 'Turn expertise into structured sessions, measurable progress, and stronger ventures.',
+    eyebrow: 'Mentor studio',
+    heroTitle: '5 founders are looking for your expertise.',
+    heroBody: 'Choose focused requests, prepare before each session, and keep momentum visible after the conversation.',
+    primaryAction: 'Review founder requests',
+    primaryModule: 'Founder requests',
+    primaryIcon: Icons.people_alt_outlined,
+    heroIcon: Icons.diversity_3_outlined,
+    sectionTitle: 'Make your expertise actionable',
+    cards: [
+      PersonaAction('Book a session', 'Your calendar has 3 open slots', 'Opened mentor calendar', Icons.calendar_month_outlined, Color(0xFFEDEBFA)),
+      PersonaAction('Review founder goals', 'See context before you respond', 'Opened founder goals', Icons.track_changes_outlined, Color(0xFFE3F2F4)),
+      PersonaAction('Share a resource', 'Add a playbook to the community', 'Opened resource library', Icons.library_books_outlined, Color(0xFFFFF1DB)),
+    ],
+  ),
+  'Partner': PersonaContent(
+    greeting: 'Build the ecosystem around bold ideas.',
+    summary: 'Turn your organization’s reach, programs, and resources into visible opportunities for the NCDF network.',
+    eyebrow: 'Partner workspace',
+    heroTitle: '3 collaboration opportunities are ready.',
+    heroBody: 'Create a program, connect with qualified ventures, and measure the value your partnership creates.',
+    primaryAction: 'Create a partnership',
+    primaryModule: 'Partnerships',
+    primaryIcon: Icons.add_business_outlined,
+    heroIcon: Icons.handshake_outlined,
+    sectionTitle: 'Create value together',
+    cards: [
+      PersonaAction('Launch a program', 'Invite ventures into your next initiative', 'Opened program builder', Icons.add_task_outlined, Color(0xFFE3F2F4)),
+      PersonaAction('Meet the network', 'Find ventures aligned to your goals', 'Opened partner matching', Icons.groups_outlined, Color(0xFFEAF4ED)),
+      PersonaAction('View impact report', 'See your partnership contribution', 'Opened impact report', Icons.insights_outlined, Color(0xFFFFF1DB)),
+    ],
+  ),
+};
 
 class PeopleView extends StatelessWidget {
   const PeopleView({super.key, required this.onAction});

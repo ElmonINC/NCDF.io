@@ -33,4 +33,20 @@ void main() {
     expect(find.text('Require MFA for privileged roles'), findsOneWidget);
     await tester.binding.setSurfaceSize(null);
   });
+
+  testWidgets('gives founders clickable growth actions', (
+    WidgetTester tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1400, 900));
+    await tester.pumpWidget(const MaterialApp(home: PersonaScreen()));
+    await tester.ensureVisible(find.text('Enter workspace'));
+    await tester.tap(find.text('Enter workspace'));
+    await tester.pumpAndSettle();
+    expect(find.text('Turn your ambition into momentum.'), findsOneWidget);
+    expect(find.text('Apply for funding'), findsOneWidget);
+    await tester.tap(find.text('Apply for funding'));
+    await tester.pump();
+    expect(find.text('Opened funding application started'), findsOneWidget);
+    await tester.binding.setSurfaceSize(null);
+  });
 }
