@@ -21,9 +21,7 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: PersonaScreen(email: 'admin@ncdf.io'),
-      ),
+      const MaterialApp(home: PersonaScreen(email: 'admin@ncdf.io')),
     );
     expect(find.text('Administrator'), findsOneWidget);
     expect(find.text('Founder'), findsNothing);
@@ -36,9 +34,7 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: PersonaScreen(email: 'alex@ncdf.io'),
-      ),
+      const MaterialApp(home: PersonaScreen(email: 'alex@ncdf.io')),
     );
     expect(find.text('Founder'), findsOneWidget);
     expect(find.text('Administrator'), findsNothing);
@@ -50,9 +46,7 @@ void main() {
   ) async {
     await tester.binding.setSurfaceSize(const Size(1400, 900));
     await tester.pumpWidget(
-      const MaterialApp(
-        home: PersonaScreen(email: 'admin@ncdf.io'),
-      ),
+      const MaterialApp(home: PersonaScreen(email: 'admin@ncdf.io')),
     );
     await tester.tap(find.text('Administrator'));
     await tester.pumpAndSettle();
