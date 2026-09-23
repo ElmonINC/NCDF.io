@@ -1,71 +1,59 @@
-# ncdf_app
+# NCDF Prototype Review
 
-A new Flutter project.
+The NCDF prototype is a strong foundation for a digital ecosystem connecting institutions, founders, investors and mentors. It shows clear product direction, a solid user model, and a trusting business case.
 
-## Getting Started
+Though it is not production-ready, but it is a good prototype with real potential.
 
-This project is a starting point for a Flutter application.
+## What works well
 
-A few resources to get you started if this is your first Flutter project:
+- Clear product purpose and user journeys
+- Thoughtful role separation across stakeholders
+- Strong admin and operational view conceptually
+- Good visual structure and platform foundation
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Main gaps
 
-For help getting started with Flutter development, view the
+This prototype is still mostly a front-end demo. In a financial environment, the real challenge is not the interface alone; it is trust, governance, and secure system design.
 
-# NCDF Connect
+Key concerns include:
 
-Cross-platform Flutter prototype for the Nigeria Capital Development Fund. The prototype demonstrates shared sign-in, persona-based workspaces, responsive Android/Windows layouts, administrator access review, security controls, and audit activity.
+- access control is still too dependent on UI logic rather than backend enforcement
+- data is simulated rather than governed by proper retention, classification, and ownership rules
+- admin workflows are promising but not yet backed by formal approval, audit, and segregation-of-duties controls
+- there is no mature security and compliance model for a highly sensitive financial context
 
-## Run locally
+## Technical assessment
 
-```powershell
-flutter pub get
-flutter run -d windows
-flutter run -d <android-device-id>
-```
+### Data and management
+The app needs a proper data model with institution ownership, role-based access, workflow states, and audit storage. Data governance is still missing, especially for retention, secure deletion, and controlled exports.
 
-The current sign-in and audit data are local demo state. No real identity provider or backend is connected yet.
+### Security
+As a financial product there is NEED for a serious enforcement of authentication and authorization on the backend. The frontend should reflect system state, not decide it. There is need for a stronger identity controls, access checks, session protection, and incident handling.
 
-## Release locally
+### Governance and risk
+For a platform in this domain, approval chains, role separation, audit trails, and risk-based controls are essential. These are currently non operational.
 
-The release script validates, builds, and packages both platforms into `dist/<version>`:
+## Potential
 
-```powershell
-.\tool\release.ps1 -Version 1.0.0 -BuildNumber 1
-```
+The app has real value because it addresses a genuine market need. It could evolve into a serious platform for:
 
-Pushing to `main` runs validation only. To create a GitHub Release with Windows and Android packages, push a semantic version tag:
+- institution onboarding
+- program management
+- stakeholder coordination
+- approvals and governance workflows
+- reporting and operational dashboards
 
-```powershell
-git tag v1.0.0
-git push origin v1.0.0
-```
+## How I would improve it
 
-The release workflow runs analysis and tests, builds a Windows ZIP and Android APK, and attaches both artifacts to a GitHub Release. It can also be started from the GitHub Actions tab with **Run workflow** and a tag such as `v1.0.0`. Pull requests and pushes to `main` run the validation workflow only.
+1. Move access decisions to the backend
+2. Build a real role and permission model
+3. Add proper data governance and retention rules
+4. Implement audit trails and approval workflows
+5. Strengthen security with MFA, session controls, and monitoring
+6. Prepare for compliance, governance, and operational resilience
 
-## Production security requirements
+## Closing view
 
-The UI is only a client. Production authorization must be enforced by the backend on every request using short-lived access tokens, refresh-token rotation, server-side role and permission checks, and tenant/module scoping. Never grant administrator access because a client selected the Administrator persona.
+This do not need to be redesigned now, but to harden it into a secure, trusted, and governable platform.
 
-Before production, connect an identity provider with MFA and implement:
-
-- deny-by-default RBAC or permission-based authorization
-- step-up authentication for privileged actions
-- immutable, append-only audit events with actor, target, action, timestamp, request ID, and outcome
-- server-side session listing and revocation, device tracking, and timeout policies
-- login throttling, breached-password checks, account lockout, and suspicious-login detection
-- encrypted transport, encrypted secrets, managed key rotation, and secure database backups
-- admin approval or dual control for exports, role changes, session revocation, and emergency read-only mode
-- validation at the API boundary, parameterized queries, malware scanning for uploads, and output encoding
-- dependency scanning, secret scanning, signed builds, protected branches, required reviews, and release approvals
-- privacy retention rules and an incident response process for audit data
-
-The administrator screens in the prototype are a product surface for these capabilities; they are not a substitute for backend enforcement.
-
-## Prototype privileged access
-
-For the clickable demo, the Administrator persona is shown only for email addresses in the local administrator allowlist in `lib/main.dart`; administrator accounts see only that persona. Builder and Superadmin users get a separate restricted control-plane screen with a verification step, similar in purpose to a Django admin surface. These are demonstration gates only: production must enforce email, role, device, MFA, and permission checks in the backend before returning privileged data.
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+As a developer, I see this as a strong starting point with real potential. The next step is to turn it from a concept into a dependable financial-grade system.
