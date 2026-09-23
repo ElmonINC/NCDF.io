@@ -63,5 +63,9 @@ Before production, connect an identity provider with MFA and implement:
 - privacy retention rules and an incident response process for audit data
 
 The administrator screens in the prototype are a product surface for these capabilities; they are not a substitute for backend enforcement.
+
+## Prototype privileged access
+
+For the clickable demo, the Administrator persona is shown only when the signed-in email and detected source IP match the local allowlists in `lib/main.dart`. Builder and Superadmin users get a separate restricted control-plane screen with a verification step, similar in purpose to a Django admin surface. These are demonstration gates only: a production app must resolve the client IP at the trusted edge and enforce email, role, device, MFA, and permission checks in the backend before returning any privileged data.
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.

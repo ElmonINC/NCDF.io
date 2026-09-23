@@ -7,6 +7,18 @@ const ink = Color(0xFF183A4F);
 const teal = Color(0xFF0F8B8D);
 const mint = Color(0xFFE8F4F1);
 
+const adminEmails = {'admin@ncdf.io', 'security@ncdf.io'};
+const builderEmails = {'builder@ncdf.io', 'superadmin@ncdf.io'};
+const adminIpAllowlist = {'10.0.0.10', '127.0.0.1'};
+
+bool canSeeAdmin({required String email, required String sourceIp}) =>
+  adminEmails.contains(email.toLowerCase()) &&
+  adminIpAllowlist.contains(sourceIp);
+
+bool canAccessBuilder({required String email, required String sourceIp}) =>
+  builderEmails.contains(email.toLowerCase()) &&
+  adminIpAllowlist.contains(sourceIp);
+
 class NcdfApp extends StatelessWidget {
   const NcdfApp({super.key});
 
@@ -179,7 +191,10 @@ class _SignInScreenState extends State<SignInScreen> {
                             onPressed: () => Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => const PersonaScreen(),
+                                builder: (_) => PersonaScreen(
+                                  email: email.text.trim(),
+                                  sourceIp: '127.0.0.1',
+                                ),
                               ),
                             ),
                             icon: const Icon(Icons.arrow_forward),
@@ -279,16 +294,20 @@ class WelcomePanel extends StatelessWidget {
 }
 
 class PersonaScreen extends StatefulWidget {
-  const PersonaScreen({super.key});
+  const PersonaScreen({super.key, this.email = 'admin@ncdf.io', this.sourceIp = '127.0.0.1'});
+  final String email;
+  final String sourceIp;
   @override
   State<PersonaScreen> createState() => _PersonaScreenState();
 }
 
 class _PersonaScreenState extends State<PersonaScreen> {
-  int selected = 0;
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width > 700;
+    final adminVisible = canSeeAdmin(email: widget.email, sourceIp: widget.sourceIp);
+    final builderVisible = canAccessBuilder(email: widget.email, sourceIp: widget.sourceIp);
+    final visiblePersonas = personas.where((persona) => persona.name != 'Administrator' || adminVisible).toList();
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -309,7 +328,7 @@ class _PersonaScreenState extends State<PersonaScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Your workspace is tailored to the way you contribute to NCDF.',
+                  'Tap a workspace to enter it immediately. Your access is based on your identity and security context.',
                   style: TextStyle(
                     color: Colors.blueGrey.shade600,
                     fontSize: 16,
@@ -319,7 +338,7 @@ class _PersonaScreenState extends State<PersonaScreen> {
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: personas.length,
+                  itemCount: visiblePersonas.length,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: wide ? 3 : 1,
                     childAspectRatio: wide ? 1.25 : 3.6,
@@ -327,27 +346,28 @@ class _PersonaScreenState extends State<PersonaScreen> {
                     mainAxisSpacing: 16,
                   ),
                   itemBuilder: (context, index) => PersonaCard(
-                    persona: personas[index],
-                    selected: index == selected,
-                    onTap: () => setState(() => selected = index),
-                  ),
-                ),
-                const SizedBox(height: 30),
-                SizedBox(
-                  width: 220,
-                  height: 50,
-                  child: FilledButton.icon(
-                    onPressed: () => Navigator.pushReplacement(
+                    persona: visiblePersonas[index],
+                    onTap: () => Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            WorkspaceScreen(persona: personas[selected]),
+                        builder: (_) => WorkspaceScreen(persona: visiblePersonas[index]),
                       ),
                     ),
-                    icon: const Icon(Icons.open_in_new),
-                    label: const Text('Enter workspace'),
                   ),
                 ),
+                const SizedBox(height: 24),
+                AccessContextBadge(email: widget.email, sourceIp: widget.sourceIp, adminVisible: adminVisible),
+                if (builderVisible) ...[
+                  const SizedBox(height: 18),
+                  OutlinedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BuilderConsoleGate()),
+                    ),
+                    icon: const Icon(Icons.admin_panel_settings_outlined),
+                    label: const Text('Open Builder / Superadmin console'),
+                  ),
+                ],
               ],
             ),
           ),
@@ -358,14 +378,8 @@ class _PersonaScreenState extends State<PersonaScreen> {
 }
 
 class PersonaCard extends StatelessWidget {
-  const PersonaCard({
-    super.key,
-    required this.persona,
-    required this.selected,
-    required this.onTap,
-  });
+  const PersonaCard({super.key, required this.persona, required this.onTap});
   final Persona persona;
-  final bool selected;
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => InkWell(
@@ -375,21 +389,13 @@ class PersonaCard extends StatelessWidget {
       duration: const Duration(milliseconds: 180),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: selected ? navy : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: selected ? teal : const Color(0xFFE1E9E6),
-          width: selected ? 2 : 1,
+          color: const Color(0xFFE1E9E6),
+          width: 1,
         ),
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: teal.withValues(alpha: .16),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ]
-            : null,
+        boxShadow: [BoxShadow(color: teal.withValues(alpha: .08), blurRadius: 14, offset: const Offset(0, 6))],
       ),
       child: Row(
         children: [
@@ -397,12 +403,10 @@ class PersonaCard extends StatelessWidget {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: selected
-                  ? Colors.white.withValues(alpha: .12)
-                  : persona.color,
+                color: persona.color,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(persona.icon, color: selected ? Colors.white : ink),
+            child: Icon(persona.icon, color: ink),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -415,7 +419,7 @@ class PersonaCard extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
-                    color: selected ? Colors.white : ink,
+                    color: ink,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -423,20 +427,107 @@ class PersonaCard extends StatelessWidget {
                   persona.description,
                   style: TextStyle(
                     fontSize: 12,
-                    color: selected
-                        ? Colors.white.withValues(alpha: .72)
-                        : Colors.blueGrey.shade600,
+                    color: Colors.blueGrey.shade600,
                   ),
                 ),
               ],
             ),
           ),
-          if (selected)
-            const Icon(Icons.check_circle, color: Color(0xFF8AD3C8)),
+          const Icon(Icons.arrow_forward_ios, color: teal, size: 14),
         ],
       ),
     ),
   );
+}
+
+class AccessContextBadge extends StatelessWidget {
+  const AccessContextBadge({super.key, required this.email, required this.sourceIp, required this.adminVisible});
+  final String email;
+  final String sourceIp;
+  final bool adminVisible;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(color: mint, borderRadius: BorderRadius.circular(12)),
+    child: Row(
+      children: [
+        const Icon(Icons.verified_user_outlined, color: teal, size: 19),
+        const SizedBox(width: 10),
+        Expanded(child: Text('$email  •  IP $sourceIp', style: const TextStyle(color: ink, fontSize: 12, fontWeight: FontWeight.w600))),
+        Text(adminVisible ? 'Admin enabled' : 'Standard access', style: TextStyle(color: adminVisible ? teal : Colors.blueGrey, fontSize: 11, fontWeight: FontWeight.w700)),
+      ],
+    ),
+  );
+}
+
+class BuilderConsoleGate extends StatefulWidget {
+  const BuilderConsoleGate({super.key});
+  @override
+  State<BuilderConsoleGate> createState() => _BuilderConsoleGateState();
+}
+
+class _BuilderConsoleGateState extends State<BuilderConsoleGate> {
+  bool verified = false;
+  final code = TextEditingController();
+
+  @override
+  void dispose() {
+    code.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Builder / Superadmin access'), backgroundColor: navy, foregroundColor: Colors.white),
+    body: Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(28),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: verified ? const BuilderConsole() : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Icon(Icons.admin_panel_settings_outlined, color: teal, size: 48),
+            const SizedBox(height: 18),
+            Text('Restricted control plane', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: ink, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 10),
+            const Text('This is a separate administrative surface for builders and superadmins. Production access must require backend MFA, device trust, and server-side permission checks.', style: TextStyle(color: Colors.blueGrey, height: 1.45)),
+            const SizedBox(height: 24),
+            TextField(controller: code, obscureText: true, decoration: const InputDecoration(labelText: 'Builder verification code', prefixIcon: Icon(Icons.key_outlined))),
+            const SizedBox(height: 16),
+            SizedBox(width: double.infinity, height: 50, child: FilledButton.icon(onPressed: () => setState(() => verified = true), icon: const Icon(Icons.lock_open_outlined), label: const Text('Verify and open console'))),
+          ]),
+        ),
+      ),
+    ),
+  );
+}
+
+class BuilderConsole extends StatelessWidget {
+  const BuilderConsole({super.key});
+  @override
+  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    Text('Control plane', style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: ink, fontWeight: FontWeight.w800)),
+    const SizedBox(height: 8),
+    const Text('The operational surface for managing modules, permissions, and releases.', style: TextStyle(color: Colors.blueGrey, fontSize: 15)),
+    const SizedBox(height: 26),
+    Panel(title: 'Backend operations', child: Column(children: [
+      _ConsoleAction(icon: Icons.extension_outlined, title: 'Module registry', detail: 'Enable, pause, or configure NCDF modules'),
+      _ConsoleAction(icon: Icons.policy_outlined, title: 'Permission policies', detail: 'Review role and IP policy changes'),
+      _ConsoleAction(icon: Icons.cloud_upload_outlined, title: 'Release management', detail: 'Review builds and deployment approvals'),
+      _ConsoleAction(icon: Icons.storage_outlined, title: 'Data operations', detail: 'Backups, retention, and export controls'),
+    ])),
+    const SizedBox(height: 18),
+    Panel(title: 'Privileged session', child: Row(children: [const Icon(Icons.timer_outlined, color: teal), const SizedBox(width: 10), const Expanded(child: Text('Session expires in 14 minutes', style: TextStyle(color: ink, fontWeight: FontWeight.w700))), OutlinedButton(onPressed: () {}, child: const Text('Re-authenticate'))])),
+  ]);
+}
+
+class _ConsoleAction extends StatelessWidget {
+  const _ConsoleAction({required this.icon, required this.title, required this.detail});
+  final IconData icon;
+  final String title;
+  final String detail;
+  @override
+  Widget build(BuildContext context) => ListTile(contentPadding: const EdgeInsets.symmetric(vertical: 5), leading: Container(width: 38, height: 38, decoration: const BoxDecoration(color: mint, shape: BoxShape.circle), child: Icon(icon, color: teal, size: 19)), title: Text(title, style: const TextStyle(color: ink, fontWeight: FontWeight.w700, fontSize: 13)), subtitle: Text(detail, style: const TextStyle(color: Colors.blueGrey, fontSize: 12)), trailing: const Icon(Icons.arrow_forward_ios, color: teal, size: 14));
 }
 
 class WorkspaceScreen extends StatefulWidget {
