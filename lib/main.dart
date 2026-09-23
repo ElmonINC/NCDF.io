@@ -1028,13 +1028,21 @@ class Dashboard extends StatelessWidget {
   final void Function(String, String) onAction;
   @override
   Widget build(BuildContext context) {
-    if (admin && page == 0)
+    if (admin && page == 0) {
       return AdminControlCenter(logs: logs, onAction: onAction);
-    if (admin && page == 2) return AuditView(logs: logs);
-    if (admin && page == 1) return PeopleView(onAction: onAction);
-    if (admin && page == 3) return SecurityCenter(onAction: onAction);
-    if (!admin && page == 0)
+    }
+    if (admin && page == 2) {
+      return AuditView(logs: logs);
+    }
+    if (admin && page == 1) {
+      return PeopleView(onAction: onAction);
+    }
+    if (admin && page == 3) {
+      return SecurityCenter(onAction: onAction);
+    }
+    if (!admin && page == 0) {
       return PersonaHome(persona: persona, onAction: onAction);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
